@@ -73,6 +73,9 @@ dependencies {
     // --- Seguridad para Token JWT ---
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
+    // Carga de Imágenes Asíncronas desde Internet (Coil para Compose)
+    implementation("io.coil-kt:coil-compose:2.7.0")
+
     // --- Room Database (Caché local/offline de catálogos) ---
     val roomVersion = "2.6.1"
     implementation("androidx.room:room-runtime:$roomVersion")

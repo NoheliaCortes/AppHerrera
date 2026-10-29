@@ -1,6 +1,5 @@
 package com.sistemas.herrerasystemmobile.data.remote.retrofit
 
-import android.content.Context
 import com.sistemas.herrerasystemmobile.data.remote.api.ApiService
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -8,11 +7,11 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
     // URL publica en Azure App Service
-    private const val BASE_URL = "https://tu-appservice-name.azurewebsites.net/api/"
+    const val API_ORIGIN = "https://api-herrera-deega3a2e8d8cbge.canadacentral-01.azurewebsites.net"
+    private const val BASE_URL = "$API_ORIGIN/api/"
 
-    fun getApiService(context: Context): ApiService {
+    fun getApiService(): ApiService {
         val okHttpClient = OkHttpClient.Builder()
-            .addInterceptor(AuthInterceptor(context))
             .build()
 
         return Retrofit.Builder()

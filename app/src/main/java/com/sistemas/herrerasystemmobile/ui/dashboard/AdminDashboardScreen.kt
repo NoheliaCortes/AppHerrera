@@ -26,10 +26,11 @@ import com.sistemas.herrerasystemmobile.ui.theme.*
 fun AdminDashboardScreen(
     state: UiState<AdminDashboardDataDto>,
     onRefresh: () -> Unit = {},
-    onOpenDrawer: () -> Unit = {} // <-- ¡Asegúrate de agregar esta línea!
+    onOpenDrawer: () -> Unit = {},
+    onOpenProducts: () -> Unit = {}
 ) {
     Scaffold(
-        bottomBar = { BottomNavigationBar(onOpenDrawer = onOpenDrawer) }
+        bottomBar = { BottomNavigationBar(onOpenDrawer = onOpenDrawer, onOpenProducts = onOpenProducts) }
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -252,7 +253,11 @@ fun QuickAccessButton(title: String, bgColor: Color, iconColor: Color) {
 }
 
 @Composable
-fun BottomNavigationBar(onOpenDrawer: () -> Unit = {}) {
+fun BottomNavigationBar(
+    onOpenDrawer: () -> Unit = {},
+    onOpenProducts: () -> Unit = {},
+    productsSelected: Boolean = false
+) {
     NavigationBar(containerColor = CardBackground) {
         NavigationBarItem(
             selected = true,
@@ -261,8 +266,8 @@ fun BottomNavigationBar(onOpenDrawer: () -> Unit = {}) {
             label = { Text("Inicio", fontSize = 10.sp) }
         )
         NavigationBarItem(
-            selected = false,
-            onClick = { },
+            selected = productsSelected,
+            onClick = onOpenProducts,
             icon = { Icon(Icons.Default.People, contentDescription = null) },
             label = { Text("Clientes", fontSize = 10.sp) }
         )

@@ -121,6 +121,7 @@ fun AppDrawerContent(
 
             // 3. SECCIÓN GESTIÓN
             DrawerSectionTitle("GESTIÓN")
+            DrawerMenuItem("Productos", Icons.Outlined.Inventory2, "products", currentRoute, onNavigate)
             DrawerMenuItem("Reportes", Icons.Outlined.BarChart, "reports", currentRoute, onNavigate)
             DrawerMenuItem("Precios", Icons.Outlined.Sell, "precios", currentRoute, onNavigate)
             DrawerMenuItem("Info del Producto", Icons.Outlined.Layers, "info_producto", currentRoute, onNavigate)

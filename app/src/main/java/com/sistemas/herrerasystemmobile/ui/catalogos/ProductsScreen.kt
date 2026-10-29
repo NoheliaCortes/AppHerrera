@@ -42,10 +42,11 @@ fun ProductsScreen(
     onSearchChange: (String) -> Unit,
     onCategorySelect: (String) -> Unit,
     onRefresh: () -> Unit,
-    onOpenDrawer: () -> Unit = {}
+    onOpenDrawer: () -> Unit = {},
+    onOpenProducts: () -> Unit = {}
 ) {
     Scaffold(
-        bottomBar = { BottomNavigationBar(onOpenDrawer = onOpenDrawer) }
+        bottomBar = { BottomNavigationBar(onOpenDrawer = onOpenDrawer, onOpenProducts = onOpenProducts, productsSelected = true) }
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -95,6 +96,10 @@ private fun ProductsContent(
     onSearchChange: (String) -> Unit,
     onCategorySelect: (String) -> Unit
 ) {
+    val visibleProducts = remember(data.products, selectedCategory) {
+        if (selectedCategory == "Todas") data.products
+        else data.products.filter { it.lineName.contains(selectedCategory, ignoreCase = true) }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -226,7 +231,7 @@ private fun ProductsContent(
                 shape = CircleShape
             ) {
                 Text(
-                    text = "${data.products.size}",
+                    text = "${visibleProducts.size}",
                     color = Color.White,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
@@ -244,7 +249,7 @@ private fun ProductsContent(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxSize()
         ) {
-            items(data.products) { product ->
+            items(visibleProducts) { product ->
                 ProductCard(product = product)
             }
         }
@@ -278,12 +283,13 @@ fun StatCard(title: String, count: String, bgColor: Color, iconColor: Color, mod
 
 @Composable
 fun ProductCard(product: ProductCatalogDto) {
-    val azureOrigin = "https://tu-appservice-name.azurewebsites.net"
+    val azureOrigin = com.sistemas.herrerasystemmobile.data.remote.retrofit.RetrofitClient.API_ORIGIN
     val fullImageUrl = remember(product.imageUrl) {
+        val imageUrl = product.imageUrl
         when {
-            product.imageUrl.isNull_or_blank() -> null
-            product.imageUrl.startsWith("http") -> product.imageUrl
-            else -> "$azureOrigin${product.imageUrl}"
+            imageUrl.isNullOrBlank() -> null
+            imageUrl.startsWith("http://", ignoreCase = true) || imageUrl.startsWith("https://", ignoreCase = true) -> imageUrl
+            else -> "$azureOrigin/${imageUrl.trimStart('/')}"
         }
     }
 
@@ -356,7 +362,7 @@ fun ProductCard(product: ProductCatalogDto) {
                 )
 
                 Text(
-                    text = product.lineName,
+                text = "${product.lineName} · ${product.flavorName} · ${product.presentationName}",
                     fontSize = 10.sp,
                     color = TextMuted
                 )

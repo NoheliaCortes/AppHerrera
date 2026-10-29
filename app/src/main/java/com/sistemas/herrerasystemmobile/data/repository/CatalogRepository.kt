@@ -11,12 +11,28 @@ class CatalogRepository(private val apiService: ApiService) {
         lineId: Int? = null
     ): Result<List<ProductCatalogDto>> {
         return try {
-            val response = apiService.getProductCatalog(search = search, lineId = lineId)
-            if (response.isSuccessful && response.body()?.success == true) {
-                Result.success(response.body()?.data?.data ?: emptyList())
-            } else {
-                Result.failure(Exception(response.body()?.message ?: "Error al obtener catálogo"))
-            }
+            val products = mutableListOf<ProductCatalogDto>()
+            var page = 1
+            var hasNextPage: Boolean
+            do {
+                val response = apiService.getProductCatalog(
+                    search = search,
+                    lineId = lineId,
+                    active = null,
+                    page = page,
+                    pageSize = 50
+                )
+                val envelope = response.body()
+                if (!response.isSuccessful || envelope?.success != true || envelope.data == null) {
+                    return Result.failure(
+                        Exception(envelope?.message?.takeIf { it.isNotBlank() } ?: "Error HTTP ${response.code()} al obtener catálogo")
+                    )
+                }
+                products += envelope.data.data
+                hasNextPage = envelope.data.hasNextPage
+                page++
+            } while (hasNextPage)
+            Result.success(products)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -25,10 +41,11 @@ class CatalogRepository(private val apiService: ApiService) {
     suspend fun getProductStats(): Result<ProductStatsDto> {
         return try {
             val response = apiService.getProductStats()
-            if (response.isSuccessful && response.body()?.success == true && response.body()?.data != null) {
-                Result.success(response.body()!!.data!!)
+            val envelope = response.body()
+            if (response.isSuccessful && envelope?.success == true && envelope.data != null) {
+                Result.success(envelope.data)
             } else {
-                Result.failure(Exception(response.body()?.message ?: "Error al obtener estadísticas"))
+                Result.failure(Exception(envelope?.message?.takeIf { it.isNotBlank() } ?: "Error HTTP ${response.code()} al obtener estadísticas"))
             }
         } catch (e: Exception) {
             Result.failure(e)

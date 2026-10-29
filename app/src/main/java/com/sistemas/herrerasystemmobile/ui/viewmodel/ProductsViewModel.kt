@@ -9,6 +9,10 @@ import com.sistemas.herrerasystemmobile.ui.common.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
 data class ProductsUiData(
     val stats: ProductStatsDto? = null,
@@ -16,6 +20,7 @@ data class ProductsUiData(
 )
 
 class ProductsViewModel(private val repository: CatalogRepository) : ViewModel() {
+    private var searchJob: Job? = null
 
     private val _uiState = MutableStateFlow<UiState<ProductsUiData>>(UiState.Loading)
     val uiState: StateFlow<UiState<ProductsUiData>> = _uiState
@@ -34,10 +39,11 @@ class ProductsViewModel(private val repository: CatalogRepository) : ViewModel()
         viewModelScope.launch {
             _uiState.value = UiState.Loading
 
-            val statsResult = repository.getProductStats()
-            val catalogResult = repository.getProductCatalog(
-                search = _searchQuery.value.ifBlank { null }
-            )
+            val (statsResult, catalogResult) = coroutineScope {
+                val stats = async { repository.getProductStats() }
+                val catalog = async { repository.getProductCatalog(search = _searchQuery.value.ifBlank { null }) }
+                stats.await() to catalog.await()
+            }
 
             if (catalogResult.isSuccess) {
                 _uiState.value = UiState.Success(
@@ -56,7 +62,11 @@ class ProductsViewModel(private val repository: CatalogRepository) : ViewModel()
 
     fun onSearchQueryChanged(query: String) {
         _searchQuery.value = query
-        loadData()
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
+            delay(350)
+            loadData()
+        }
     }
 
     fun onCategorySelected(category: String) {

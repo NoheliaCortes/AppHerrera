@@ -14,6 +14,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sistemas.herrerasystemmobile.data.remote.dto.AdminDashboardDataDto
 import com.sistemas.herrerasystemmobile.data.remote.retrofit.RetrofitClient
 import com.sistemas.herrerasystemmobile.data.repository.CatalogRepository
+import com.sistemas.herrerasystemmobile.data.repository.AuthRepository
 import com.sistemas.herrerasystemmobile.ui.auth.LoginScreen
 import com.sistemas.herrerasystemmobile.ui.catalogos.ProductsScreen
 import com.sistemas.herrerasystemmobile.ui.common.AppDrawerContent
@@ -21,6 +22,8 @@ import com.sistemas.herrerasystemmobile.ui.common.UiState
 import com.sistemas.herrerasystemmobile.ui.dashboard.AdminDashboardScreen
 import com.sistemas.herrerasystemmobile.ui.theme.HerreraSystemMobileTheme
 import com.sistemas.herrerasystemmobile.ui.viewmodel.ProductsViewModel
+import com.sistemas.herrerasystemmobile.ui.viewmodel.AuthViewModel
+import com.sistemas.herrerasystemmobile.utils.SessionManager
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -29,18 +32,29 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             HerreraSystemMobileTheme {
-                var isLogged by remember { mutableStateOf(false) }
+                val sessionManager = remember { SessionManager(applicationContext) }
+                val apiService = remember(sessionManager) { RetrofitClient.getApiService(sessionManager) }
+                var isLogged by remember { mutableStateOf(sessionManager.isAuthenticated) }
                 var currentRoute by remember { mutableStateOf("dashboard") }
                 val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
                 val scope = rememberCoroutineScope()
+                val authViewModel: AuthViewModel = viewModel(
+                    factory = remember {
+                        object : ViewModelProvider.Factory {
+                            @Suppress("UNCHECKED_CAST")
+                            override fun <T : ViewModel> create(modelClass: Class<T>): T =
+                                AuthViewModel(AuthRepository(apiService), sessionManager) as T
+                        }
+                    }
+                )
+                val loginState by authViewModel.loginState.collectAsState()
+                val userName by sessionManager.userName.collectAsState()
                 val productsViewModel: ProductsViewModel = viewModel(
                     factory = remember {
                         object : ViewModelProvider.Factory {
                             @Suppress("UNCHECKED_CAST")
                             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                                return ProductsViewModel(
-                                    CatalogRepository(RetrofitClient.getApiService())
-                                ) as T
+                                return ProductsViewModel(CatalogRepository(apiService)) as T
                             }
                         }
                     }
@@ -50,7 +64,15 @@ class MainActivity : ComponentActivity() {
                 val selectedCategory by productsViewModel.selectedCategory.collectAsState()
 
                 if (!isLogged) {
-                    LoginScreen(onLoginClick = { _, _ -> isLogged = true })
+                    LoginScreen(
+                        loginState = loginState,
+                        onLoginClick = authViewModel::login
+                    )
+                    LaunchedEffect(loginState) {
+                        if (loginState is UiState.Success && sessionManager.isAuthenticated) {
+                            isLogged = true
+                        }
+                    }
                 } else {
                     ModalNavigationDrawer(
                         drawerState = drawerState,
@@ -65,8 +87,10 @@ class MainActivity : ComponentActivity() {
                                 onLogoutClick = {
                                     scope.launch { drawerState.close() }
                                     currentRoute = "dashboard"
+                                    authViewModel.logout()
                                     isLogged = false
-                                }
+                                },
+                                userName = userName ?: "Usuario"
                             )
                         }
                     ) {
@@ -84,8 +108,8 @@ class MainActivity : ComponentActivity() {
                                 )
                             } else {
                                 val dashboard = AdminDashboardDataDto(
-                                    adminName = "Nohelia",
-                                    userRole = "Marcelo - Administrador",
+                                    adminName = userName ?: "Usuario",
+                                    userRole = "Administrador",
                                     dateText = "domingo, 16 de agosto de 2026",
                                     quickAccess = emptyList(),
                                     kpis = emptyList(),

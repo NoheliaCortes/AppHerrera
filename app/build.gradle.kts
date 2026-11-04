@@ -2,7 +2,6 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
-    id("com.google.devtools.ksp")
 }
 
 android {
@@ -47,11 +46,6 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
     }
 }
 
-// 3. FORZAR JVM 11 ESPECÍFICAMENTE PARA LAS TAREAS DE KSP
-ksp {
-    arg("room.schemaLocation", "$projectDir/schemas")
-}
-
 dependencies {
     // --- Compose Base & Material Design 3 ---
     implementation(platform("androidx.compose:compose-bom:2024.10.00"))
@@ -62,6 +56,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended:1.7.5")
     implementation("androidx.navigation:navigation-compose:2.8.3")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.6")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.6")
 
     // --- Retrofit & Gson (Conexión a tu API .NET) ---
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
@@ -73,12 +68,10 @@ dependencies {
     // --- Seguridad para Token JWT ---
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
+    // --- HTTP ---
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
     // Carga de Imágenes Asíncronas desde Internet (Coil para Compose)
     implementation("io.coil-kt:coil-compose:2.7.0")
 
-    // --- Room Database (Caché local/offline de catálogos) ---
-    val roomVersion = "2.6.1"
-    implementation("androidx.room:room-runtime:$roomVersion")
-    implementation("androidx.room:room-ktx:$roomVersion")
-    ksp("androidx.room:room-compiler:$roomVersion")
 }

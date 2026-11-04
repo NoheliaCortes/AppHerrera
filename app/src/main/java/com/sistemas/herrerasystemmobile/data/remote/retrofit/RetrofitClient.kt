@@ -1,6 +1,7 @@
 package com.sistemas.herrerasystemmobile.data.remote.retrofit
 
 import com.sistemas.herrerasystemmobile.data.remote.api.ApiService
+import com.sistemas.herrerasystemmobile.utils.SessionManager
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -10,8 +11,9 @@ object RetrofitClient {
     const val API_ORIGIN = "https://api-herrera-deega3a2e8d8cbge.canadacentral-01.azurewebsites.net"
     private const val BASE_URL = "$API_ORIGIN/api/"
 
-    fun getApiService(): ApiService {
+    fun getApiService(sessionManager: SessionManager): ApiService {
         val okHttpClient = OkHttpClient.Builder()
+            .addInterceptor(AuthInterceptor(sessionManager))
             .build()
 
         return Retrofit.Builder()

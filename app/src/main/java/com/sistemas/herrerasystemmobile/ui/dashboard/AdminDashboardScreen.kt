@@ -27,10 +27,12 @@ fun AdminDashboardScreen(
     state: UiState<AdminDashboardDataDto>,
     onRefresh: () -> Unit = {},
     onOpenDrawer: () -> Unit = {},
-    onOpenProducts: () -> Unit = {}
+    onOpenProducts: () -> Unit = {},
+    onOpenDashboard: () -> Unit = {},
+    onOpenClients: () -> Unit = {}
 ) {
     Scaffold(
-        bottomBar = { BottomNavigationBar(onOpenDrawer = onOpenDrawer, onOpenProducts = onOpenProducts) }
+        bottomBar = { BottomNavigationBar(onOpenDrawer = onOpenDrawer, onOpenProducts = onOpenProducts, onOpenDashboard = onOpenDashboard, onOpenClients = onOpenClients) }
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -256,24 +258,27 @@ fun QuickAccessButton(title: String, bgColor: Color, iconColor: Color) {
 fun BottomNavigationBar(
     onOpenDrawer: () -> Unit = {},
     onOpenProducts: () -> Unit = {},
-    productsSelected: Boolean = false
+    productsSelected: Boolean = false,
+    onOpenDashboard: () -> Unit = {},
+    onOpenClients: () -> Unit = {},
+    clientsSelected: Boolean = false
 ) {
     NavigationBar(containerColor = CardBackground) {
         NavigationBarItem(
-            selected = true,
-            onClick = { },
+            selected = !productsSelected && !clientsSelected,
+            onClick = onOpenDashboard,
             icon = { Icon(Icons.Default.GridView, contentDescription = null) },
             label = { Text("Inicio", fontSize = 10.sp) }
         )
         NavigationBarItem(
-            selected = productsSelected,
-            onClick = onOpenProducts,
+            selected = clientsSelected,
+            onClick = onOpenClients,
             icon = { Icon(Icons.Default.People, contentDescription = null) },
             label = { Text("Clientes", fontSize = 10.sp) }
         )
         NavigationBarItem(
-            selected = false,
-            onClick = { },
+            selected = productsSelected,
+            onClick = onOpenProducts,
             icon = { Icon(Icons.Default.Inventory2, contentDescription = null) },
             label = { Text("Productos", fontSize = 10.sp) }
         )

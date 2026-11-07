@@ -43,10 +43,12 @@ fun ProductsScreen(
     onCategorySelect: (String) -> Unit,
     onRefresh: () -> Unit,
     onOpenDrawer: () -> Unit = {},
-    onOpenProducts: () -> Unit = {}
+    onOpenProducts: () -> Unit = {},
+    onOpenDashboard: () -> Unit = {},
+    onOpenClients: () -> Unit = {}
 ) {
     Scaffold(
-        bottomBar = { BottomNavigationBar(onOpenDrawer = onOpenDrawer, onOpenProducts = onOpenProducts, productsSelected = true) }
+        bottomBar = { BottomNavigationBar(onOpenDrawer = onOpenDrawer, onOpenProducts = onOpenProducts, productsSelected = true, onOpenDashboard = onOpenDashboard, onOpenClients = onOpenClients) }
     ) { paddingValues ->
         Box(
             modifier = Modifier

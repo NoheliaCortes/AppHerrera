@@ -15,6 +15,12 @@ import com.sistemas.herrerasystemmobile.data.remote.dto.AdminDashboardDataDto
 import com.sistemas.herrerasystemmobile.data.remote.retrofit.RetrofitClient
 import com.sistemas.herrerasystemmobile.data.repository.CatalogRepository
 import com.sistemas.herrerasystemmobile.data.repository.AuthRepository
+import com.sistemas.herrerasystemmobile.data.repository.ClientRepository
+import com.sistemas.herrerasystemmobile.data.repository.UserRepository
+import com.sistemas.herrerasystemmobile.data.repository.ReportRepository
+import com.sistemas.herrerasystemmobile.ui.clients.ClientsScreen
+import com.sistemas.herrerasystemmobile.ui.users.UsersScreen
+import com.sistemas.herrerasystemmobile.ui.reports.ReportsScreen
 import com.sistemas.herrerasystemmobile.ui.auth.LoginScreen
 import com.sistemas.herrerasystemmobile.ui.catalogos.ProductsScreen
 import com.sistemas.herrerasystemmobile.ui.common.AppDrawerContent
@@ -23,6 +29,9 @@ import com.sistemas.herrerasystemmobile.ui.dashboard.AdminDashboardScreen
 import com.sistemas.herrerasystemmobile.ui.theme.HerreraSystemMobileTheme
 import com.sistemas.herrerasystemmobile.ui.viewmodel.ProductsViewModel
 import com.sistemas.herrerasystemmobile.ui.viewmodel.AuthViewModel
+import com.sistemas.herrerasystemmobile.ui.viewmodel.ClientsViewModel
+import com.sistemas.herrerasystemmobile.ui.viewmodel.UsersViewModel
+import com.sistemas.herrerasystemmobile.ui.viewmodel.ReportsViewModel
 import com.sistemas.herrerasystemmobile.utils.SessionManager
 import kotlinx.coroutines.launch
 
@@ -34,7 +43,7 @@ class MainActivity : ComponentActivity() {
             HerreraSystemMobileTheme {
                 val sessionManager = remember { SessionManager(applicationContext) }
                 val apiService = remember(sessionManager) { RetrofitClient.getApiService(sessionManager) }
-                var isLogged by remember { mutableStateOf(sessionManager.isAuthenticated) }
+                var isLogged by remember { mutableStateOf(false) }
                 var currentRoute by remember { mutableStateOf("dashboard") }
                 val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
                 val scope = rememberCoroutineScope()
@@ -62,6 +71,33 @@ class MainActivity : ComponentActivity() {
                 val productsState by productsViewModel.uiState.collectAsState()
                 val searchQuery by productsViewModel.searchQuery.collectAsState()
                 val selectedCategory by productsViewModel.selectedCategory.collectAsState()
+                val clientsViewModel: ClientsViewModel = viewModel(
+                    factory = remember { object : ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T = ClientsViewModel(ClientRepository(apiService)) as T
+                    } }
+                )
+                val clientsState by clientsViewModel.uiState.collectAsState()
+                val clientsQuery by clientsViewModel.query.collectAsState()
+                val clientsFilter by clientsViewModel.activeFilter.collectAsState()
+                val usersViewModel: UsersViewModel = viewModel(
+                    factory = remember { object : ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T = UsersViewModel(UserRepository(apiService)) as T
+                    } }
+                )
+                val usersState by usersViewModel.uiState.collectAsState()
+                val usersQuery by usersViewModel.query.collectAsState()
+                val reportsViewModel: ReportsViewModel = viewModel(
+                    factory = remember { object : ViewModelProvider.Factory {
+                        @Suppress("UNCHECKED_CAST")
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T = ReportsViewModel(ReportRepository(apiService)) as T
+                    } }
+                )
+                val reportsState by reportsViewModel.uiState.collectAsState()
+                val selectedReport by reportsViewModel.reportType.collectAsState()
+                val reportYear by reportsViewModel.year.collectAsState()
+                val reportMonth by reportsViewModel.month.collectAsState()
 
                 if (!isLogged) {
                     LoginScreen(
@@ -71,6 +107,7 @@ class MainActivity : ComponentActivity() {
                     LaunchedEffect(loginState) {
                         if (loginState is UiState.Success && sessionManager.isAuthenticated) {
                             isLogged = true
+                            currentRoute = "dashboard"
                         }
                     }
                 } else {
@@ -80,8 +117,11 @@ class MainActivity : ComponentActivity() {
                             AppDrawerContent(
                                 currentRoute = currentRoute,
                                 onNavigate = { route ->
-                                    currentRoute = if (route == "products") "products" else "dashboard"
+                                    currentRoute = when (route) { "products" -> "products"; "clients" -> "clients"; "usuarios" -> "usuarios"; "reports" -> "reports"; else -> "dashboard" }
                                     if (currentRoute == "products") productsViewModel.loadData()
+                                    if (currentRoute == "clients") clientsViewModel.load()
+                                    if (currentRoute == "usuarios") usersViewModel.load()
+                                    if (currentRoute == "reports") reportsViewModel.refresh()
                                     scope.launch { drawerState.close() }
                                 },
                                 onLogoutClick = {
@@ -95,7 +135,41 @@ class MainActivity : ComponentActivity() {
                         }
                     ) {
                         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                            if (currentRoute == "products") {
+                            if (currentRoute == "reports") {
+                                ReportsScreen(
+                                    state = reportsState,
+                                    selectedType = selectedReport,
+                                    year = reportYear,
+                                    month = reportMonth,
+                                    onSelectType = reportsViewModel::selectReport,
+                                    onSelectYear = reportsViewModel::selectYear,
+                                    onSelectMonth = reportsViewModel::selectMonth,
+                                    onRefresh = reportsViewModel::refresh,
+                                    onBack = { currentRoute = "dashboard" }
+                                )
+                            } else if (currentRoute == "usuarios") {
+                                UsersScreen(
+                                    state = usersState,
+                                    query = usersQuery,
+                                    onSearch = usersViewModel::search,
+                                    onRefresh = usersViewModel::load,
+                                    onBack = { currentRoute = "dashboard" },
+                                    onCreate = { dto, done -> usersViewModel.create(dto, done) },
+                                    onUpdate = { id, dto, done -> usersViewModel.update(id, dto, done) },
+                                    onToggleStatus = { id, done -> usersViewModel.toggleStatus(id, done) },
+                                    onResetPassword = { id, password, done -> usersViewModel.resetPassword(id, password, done) }
+                                )
+                            } else if (currentRoute == "clients") {
+                                ClientsScreen(clientsState, clientsQuery, clientsFilter,
+                                    onSearch = clientsViewModel::search, onFilter = clientsViewModel::filter,
+                                    onRefresh = { clientsViewModel.load() }, onOpenDrawer = { scope.launch { drawerState.open() } },
+                                    onOpenDashboard = { currentRoute = "dashboard" },
+                                    onOpenProducts = { currentRoute = "products"; productsViewModel.loadData() },
+                                    onOpenClients = { currentRoute = "clients" },
+                                    onCreate = { dto -> clientsViewModel.create(dto) { } },
+                                    onUpdate = { id, dto -> clientsViewModel.update(id, dto) { } },
+                                    onDelete = { id -> clientsViewModel.delete(id) { } })
+                            } else if (currentRoute == "products") {
                                 ProductsScreen(
                                     state = productsState,
                                     searchQuery = searchQuery,
@@ -104,7 +178,9 @@ class MainActivity : ComponentActivity() {
                                     onCategorySelect = productsViewModel::onCategorySelected,
                                     onRefresh = productsViewModel::loadData,
                                     onOpenDrawer = { scope.launch { drawerState.open() } },
-                                    onOpenProducts = { currentRoute = "products" }
+                                    onOpenProducts = { currentRoute = "products" },
+                                    onOpenDashboard = { currentRoute = "dashboard" },
+                                    onOpenClients = { currentRoute = "clients" }
                                 )
                             } else {
                                 val dashboard = AdminDashboardDataDto(
@@ -121,7 +197,7 @@ class MainActivity : ComponentActivity() {
                                     onOpenProducts = {
                                         currentRoute = "products"
                                         productsViewModel.loadData()
-                                    }
+                                    }, onOpenDashboard = { currentRoute = "dashboard" }, onOpenClients = { currentRoute = "clients" }
                                 )
                             }
                         }

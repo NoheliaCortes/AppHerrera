@@ -24,3 +24,11 @@ data class ClientUpdateDto(val municipalityId: Int, val firstName: String, val l
 
 data class ClientStatsDto(val activeCustomers: Int, val inactiveCustomers: Int,
     val distinctMunicipalitiesWithCustomers: Int, val activePointsOfSale: Int)
+
+data class MunicipalityDto(
+    @SerializedName("id") val id: Int,
+    @SerializedName("departmentId") val departmentId: Int,
+    @SerializedName("departmentName") val departmentName: String,
+    @SerializedName("municipalityName") val municipalityName: String,
+    @SerializedName("isActive") val isActive: Boolean?
+)

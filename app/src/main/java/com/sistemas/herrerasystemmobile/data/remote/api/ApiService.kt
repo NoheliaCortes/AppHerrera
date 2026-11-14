@@ -18,6 +18,13 @@ import com.sistemas.herrerasystemmobile.data.remote.dto.PagedResponse
 
 interface ApiService {
 
+    @GET("Sales/stats")
+    suspend fun getSalesStats(): Response<ApiResponse<SalesSummaryDto>>
+
+    @GET("Sales")
+    suspend fun getSales(@Query("startDate") startDate: String, @Query("endDate") endDate: String,
+        @Query("page") page: Int = 1, @Query("pageSize") pageSize: Int = 50): Response<ApiResponse<PagedResponse<SaleSummaryDto>>>
+
     @POST("Auth/login")
     suspend fun login(@Body request: LoginRequestDto): Response<LoginResponseDto>
 
@@ -43,6 +50,8 @@ interface ApiService {
 
     @GET("Customers/stats")
     suspend fun getCustomerStats(): Response<ApiResponse<ClientStatsDto>>
+    @GET("Municipalities")
+    suspend fun getMunicipalities(): Response<ApiResponse<List<MunicipalityDto>>>
     @GET("Customers/{id}")
     suspend fun getCustomer(@retrofit2.http.Path("id") id: Int): Response<ApiResponse<ClientDto>>
     @POST("Customers")

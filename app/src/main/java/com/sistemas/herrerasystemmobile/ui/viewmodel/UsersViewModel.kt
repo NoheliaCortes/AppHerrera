@@ -17,7 +17,6 @@ class UsersViewModel(private val repository: UserRepository) : ViewModel() {
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query
 
-    init { load() }
     fun search(value: String) { _query.value = value }
     fun load() = viewModelScope.launch {
         _uiState.value = UiState.Loading

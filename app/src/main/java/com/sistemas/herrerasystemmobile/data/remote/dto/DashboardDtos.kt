@@ -1,47 +1,28 @@
 package com.sistemas.herrerasystemmobile.data.remote.dto
 
-// Modelo de Accesos Rápidos
-data class QuickAccessItemDto(
-    val id: String,
-    val title: String,
-    val iconName: String,
-    val route: String
+import com.google.gson.annotations.SerializedName
+
+data class SalesSummaryDto(
+    @SerializedName("salesThisMonth") val salesThisMonth: Int = 0,
+    @SerializedName("totalIncomeThisMonth") val totalIncomeThisMonth: Double = 0.0,
+    @SerializedName("productsSoldThisMonth") val productsSoldThisMonth: Int = 0
 )
 
-// Modelo de Tarjeta KPI
-data class KpiCardDto(
-    val id: String,
-    val title: String,
-    val value: String,
-    val subtitle: String? = null,
-    val type: KpiType
+data class SaleSummaryDto(
+    @SerializedName("id") val id: Int = 0,
+    @SerializedName("saleCode") val saleCode: String = "",
+    @SerializedName("saleDate") val saleDate: String = "",
+    @SerializedName("customerName") val customerName: String? = null,
+    @SerializedName("total") val total: Double = 0.0
 )
 
-enum class KpiType {
-    VENTAS_DIA, PEDIDOS_PENDIENTES, STOCK_CRITICO, TICKET_PROMEDIO
-}
-
-// Modelo de Transacción Reciente
-data class RecentTransactionDto(
-    val id: String,
-    val clientName: String,
-    val detail: String,
-    val timeAgo: String,
-    val amount: String,
-    val tagText: String, // "Venta", "Pedido", "Reabastecimiento"
-    val tagType: TransactionTagType
-)
-
-enum class TransactionTagType {
-    VENTA, PEDIDO, REABASTECIMIENTO
-}
-
-// DTO Contenedor del Dashboard Admin
 data class AdminDashboardDataDto(
     val adminName: String,
     val userRole: String,
     val dateText: String,
-    val quickAccess: List<QuickAccessItemDto>,
-    val kpis: List<KpiCardDto>,
-    val recentTransactions: List<RecentTransactionDto>
+    val salesToday: Double = 0.0,
+    val pendingOrders: Int? = null,
+    val productsSoldThisMonth: Int = 0,
+    val averageTicket: Double = 0.0,
+    val monthlyIncome: Double = 0.0
 )

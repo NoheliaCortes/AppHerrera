@@ -31,10 +31,6 @@ class ProductsViewModel(private val repository: CatalogRepository) : ViewModel()
     private val _selectedCategory = MutableStateFlow("Todas")
     val selectedCategory: StateFlow<String> = _selectedCategory
 
-    init {
-        loadData()
-    }
-
     fun loadData() {
         viewModelScope.launch {
             _uiState.value = UiState.Loading

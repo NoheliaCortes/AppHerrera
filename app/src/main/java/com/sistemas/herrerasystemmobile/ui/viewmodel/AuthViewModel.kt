@@ -27,7 +27,7 @@ class AuthViewModel(
             _loginState.value = UiState.Loading
             repository.login(username, password)
                 .onSuccess { user ->
-                    sessionManager.saveSession(user.token, user.displayName)
+                    sessionManager.saveSession(user.token, user.displayName, user.roleId)
                     _loginState.value = UiState.Success(user.displayName)
                 }
                 .onFailure { error ->

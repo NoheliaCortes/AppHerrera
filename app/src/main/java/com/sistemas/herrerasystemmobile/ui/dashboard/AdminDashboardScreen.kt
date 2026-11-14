@@ -37,6 +37,7 @@ fun AdminDashboardScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.statusBars)
                 .padding(paddingValues)
                 .background(ScreenBackground)
         ) {
@@ -144,31 +145,21 @@ private fun DashboardContentView(
 
         // Accesos Rápidos
         item {
-            Text("Accesos rápidos", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = TextDark)
-            Spacer(modifier = Modifier.height(10.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                QuickAccessButton("Info Prod.", KpiGreenBg, PrimaryGreenButton)
-                QuickAccessButton("Precios", KpiRedBg, Color(0xFF8B5CF6))
-                QuickAccessButton("Inventario", KpiBlueBg, TagPedidoText)
-                QuickAccessButton("Transacc.", KpiGreenBg, PrimaryGreenButton)
-            }
+            Text("Resumen de ventas", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = TextDark)
         }
 
         // Sección KPIs (Matriz 2x2)
         item {
-            Text("Indicadores clave (SSAS)", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = TextDark)
+            Text("Indicadores del mes", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = TextDark)
             Spacer(modifier = Modifier.height(10.dp))
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    KpiCardView("Ventas del día", "C$4,860", KpiGreenBg, PrimaryGreenButton, modifier = Modifier.weight(1f))
-                    KpiCardView("Pedidos pendientes", "1", KpiBlueBg, TagPedidoText, modifier = Modifier.weight(1f))
+                    KpiCardView("Ventas de hoy", "C\$${"%.2f".format(data.salesToday)}", KpiGreenBg, PrimaryGreenButton, modifier = Modifier.weight(1f))
+                    KpiCardView("Pedidos pendientes", data.pendingOrders?.toString() ?: "N/D", KpiBlueBg, TagPedidoText, modifier = Modifier.weight(1f))
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    KpiCardView("Stock crítico", "8", KpiRedBg, Color(0xFFEF4444), modifier = Modifier.weight(1f))
-                    KpiCardView("Ticket promedio", "C$353", KpiYellowBg, Color(0xFFD97706), modifier = Modifier.weight(1f))
+                    KpiCardView("Productos vendidos (mes)", data.productsSoldThisMonth.toString(), KpiRedBg, Color(0xFFEF4444), modifier = Modifier.weight(1f))
+                    KpiCardView("Ticket promedio (mes)", "C\$${"%.2f".format(data.averageTicket)}", KpiYellowBg, Color(0xFFD97706), modifier = Modifier.weight(1f))
                 }
             }
         }
@@ -176,7 +167,7 @@ private fun DashboardContentView(
         // Espacio Reservado para los Gráficos Analíticos
         item {
             Spacer(modifier = Modifier.height(8.dp))
-            Text("Rendimiento analítico", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = TextDark)
+            Text("Ingresos del mes", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = TextDark)
             Spacer(modifier = Modifier.height(8.dp))
             Card(
                 shape = RoundedCornerShape(16.dp),
@@ -190,7 +181,7 @@ private fun DashboardContentView(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "📊 Espacio reservado para Gráficos SSAS\n(Top Productos / Ventas por Línea)",
+                        text = "C\$${"%.2f".format(data.monthlyIncome)}",
                         color = TextMuted,
                         fontSize = 13.sp,
                         textAlign = TextAlign.Center
@@ -234,23 +225,6 @@ fun KpiCardView(
                 Text(value, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TextDark)
             }
         }
-    }
-}
-
-@Composable
-fun QuickAccessButton(title: String, bgColor: Color, iconColor: Color) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .background(bgColor),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(Icons.Default.Widgets, contentDescription = null, tint = iconColor, modifier = Modifier.size(22.dp))
-        }
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(title, fontSize = 10.sp, color = TextMuted)
     }
 }
 

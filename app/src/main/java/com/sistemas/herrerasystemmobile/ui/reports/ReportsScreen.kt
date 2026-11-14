@@ -45,7 +45,11 @@ fun ReportsScreen(
     onRefresh: () -> Unit, onBack: () -> Unit
 ) {
     val refreshing = state is UiState.Loading
-    PullToRefreshBox(isRefreshing = refreshing, onRefresh = onRefresh, modifier = Modifier.fillMaxSize().background(ScreenBackground)) {
+    PullToRefreshBox(
+        isRefreshing = refreshing,
+        onRefresh = onRefresh,
+        modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.statusBars).background(ScreenBackground)
+    ) {
         LazyColumn(
             Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)

@@ -38,8 +38,6 @@ class ReportsViewModel(private val repository: ReportRepository) : ViewModel() {
     val month: StateFlow<Int?> = _month.asStateFlow()
     private var loadJob: Job? = null
 
-    init { refresh() }
-
     fun selectReport(value: ReportType) { if (_reportType.value != value) { _reportType.value = value; refresh() } }
     fun selectYear(value: Int) { if (_year.value != value) { _year.value = value; refresh() } }
     fun selectMonth(value: Int?) { if (_month.value != value) { _month.value = value; refresh() } }

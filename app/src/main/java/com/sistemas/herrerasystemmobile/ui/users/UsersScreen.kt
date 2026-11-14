@@ -51,7 +51,7 @@ fun UsersScreen(
     var creating by remember { mutableStateOf(false) }
     var resetting by remember { mutableStateOf<UserDto?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
-    Column(Modifier.fillMaxSize().background(ScreenBackground)) {
+    Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.statusBars).background(ScreenBackground)) {
         when (state) {
             UiState.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = PrimaryGreenButton) }
             is UiState.Error -> Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {

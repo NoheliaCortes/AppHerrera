@@ -31,7 +31,8 @@ fun AppDrawerContent(
     onLogoutClick: () -> Unit,
     userName: String = "Marcelo Mena",
     userRole: String = "Administrador",
-    userInitials: String = "NC"
+    userInitials: String = "NC",
+    canViewAdminModules: Boolean = true
 ) {
     ModalDrawerSheet(
         drawerContainerColor = ScreenBackground,
@@ -42,6 +43,7 @@ fun AppDrawerContent(
             modifier = Modifier
                 .fillMaxHeight()
                 .verticalScroll(rememberScrollState())
+                .windowInsetsPadding(WindowInsets.statusBars)
         ) {
             // 1. Cabecera Verde Menta
             Box(
@@ -124,25 +126,13 @@ fun AppDrawerContent(
             DrawerMenuItem("Inicio", Icons.Outlined.Home, "dashboard", currentRoute, onNavigate)
             DrawerMenuItem("Clientes", Icons.Outlined.PeopleOutline, "clients", currentRoute, onNavigate)
             DrawerMenuItem("Productos", Icons.Outlined.Inventory2, "products", currentRoute, onNavigate)
-            DrawerMenuItem("Reportes", Icons.Outlined.BarChart, "reports", currentRoute, onNavigate)
-            DrawerMenuItem("Precios", Icons.Outlined.Sell, "precios", currentRoute, onNavigate)
-            DrawerMenuItem("Info del Producto", Icons.Outlined.Layers, "info_producto", currentRoute, onNavigate)
-            DrawerMenuItem("Inventario", Icons.Outlined.Inventory2, "inventario", currentRoute, onNavigate)
-            DrawerMenuItem("Transacciones", Icons.Outlined.Paid, "transacciones", currentRoute, onNavigate)
-            DrawerMenuItem("Movimientos de Inventario", Icons.Outlined.LocalShipping, "movimientos", currentRoute, onNavigate)
-
+            if (canViewAdminModules) {
+                DrawerMenuItem("Reportes", Icons.Outlined.BarChart, "reports", currentRoute, onNavigate)
+                DrawerMenuItem("Usuarios", Icons.Outlined.PeopleOutline, "usuarios", currentRoute, onNavigate)
+            }
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 4. SECCIÓN SISTEMA
-            DrawerSectionTitle("SISTEMA")
-            DrawerMenuItem("Usuarios", Icons.Outlined.PeopleOutline, "usuarios", currentRoute, onNavigate)
-            DrawerMenuItem("Tema", Icons.Outlined.Palette, "tema", currentRoute, onNavigate)
-            DrawerMenuItem("Logs del Sistema", Icons.Outlined.Lock, "logs", currentRoute, onNavigate)
-            DrawerMenuItem("Configuración", Icons.Outlined.Settings, "configuracion", currentRoute, onNavigate)
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 5. SECCIÓN SESIÓN
+            // Sesión
             DrawerSectionTitle("SESIÓN")
             Row(
                 modifier = Modifier

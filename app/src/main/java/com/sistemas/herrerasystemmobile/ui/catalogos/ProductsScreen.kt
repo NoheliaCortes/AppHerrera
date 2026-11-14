@@ -2,10 +2,11 @@ package com.sistemas.herrerasystemmobile.ui.catalogos
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -102,157 +103,77 @@ private fun ProductsContent(
         if (selectedCategory == "Todas") data.products
         else data.products.filter { it.lineName.contains(selectedCategory, ignoreCase = true) }
     }
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp)
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+        contentPadding = PaddingValues(top = 12.dp, bottom = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Cabecera Superior
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(HeaderGradientEnd),
-                    contentAlignment = Alignment.Center
-                ) {
+        item {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)).background(HeaderGradientEnd), contentAlignment = Alignment.Center) {
                     Text("H", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 }
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(Modifier.width(10.dp))
                 Column {
                     Text("Sorbetería Herrera", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = TextDark)
                     Text("Catálogo de productos", fontSize = 11.sp, color = TextMuted)
                 }
             }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text("Productos", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = TextDark)
-        Text("Administra el catálogo completo de productos.", fontSize = 12.sp, color = TextMuted)
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // Tarjetas de Resumen KPI (Registrados / Activos)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            StatCard(
-                title = "Registrados",
-                count = "${data.stats?.totalProducts ?: data.products.size}",
-                bgColor = KpiGreenBg,
-                iconColor = PrimaryGreenButton,
-                modifier = Modifier.weight(1f)
-            )
-            StatCard(
-                title = "Activos",
-                count = "${data.stats?.activeProducts ?: data.products.count { it.isActive == true }}",
-                bgColor = Color(0xFFF3E8FF),
-                iconColor = Color(0xFF8B5CF6),
-                modifier = Modifier.weight(1f)
-            )
+        item {
+            Column {
+                Text("Productos", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = TextDark)
+                Text("Administra el catálogo completo de productos.", fontSize = 12.sp, color = TextMuted)
+            }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Chips de Filtros (Todas, Tradicionales, Lights, Nieves)
-        val categories = listOf("Todas", "Tradicionales", "Lights", "Nieves")
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            categories.forEach { category ->
-                val isSelected = category == selectedCategory
-                Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = if (isSelected) PrimaryGreenButton else CardBackground,
-                    modifier = Modifier.clickable { onCategorySelect(category) }
-                ) {
-                    Text(
-                        text = category,
-                        color = if (isSelected) Color.White else TextDark,
-                        fontSize = 12.sp,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
-                    )
+        item {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                StatCard("Registrados", "${data.stats?.totalProducts ?: data.products.size}", KpiGreenBg, PrimaryGreenButton, Modifier.weight(1f))
+                StatCard("Activos", "${data.stats?.activeProducts ?: data.products.count { it.isActive == true }}", Color(0xFFF3E8FF), Color(0xFF8B5CF6), Modifier.weight(1f))
+            }
+        }
+        item {
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("Todas", "Tradicionales", "Lights", "Nieves").forEach { category ->
+                    val selected = category == selectedCategory
+                    Surface(shape = RoundedCornerShape(20.dp), color = if (selected) PrimaryGreenButton else CardBackground,
+                        modifier = Modifier.clickable { onCategorySelect(category) }) {
+                        Text(category, color = if (selected) Color.White else TextDark, fontSize = 12.sp,
+                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp))
+                    }
                 }
             }
         }
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // Campo de Búsqueda + Botón Filtro
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = onSearchChange,
-                placeholder = { Text("Buscar por nombre...", fontSize = 13.sp, color = TextMuted) },
-                leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null, tint = TextMuted) },
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFFEEF2F6),
-                    unfocusedContainerColor = Color(0xFFEEF2F6),
-                    focusedBorderColor = Color.Transparent,
-                    unfocusedBorderColor = Color.Transparent
-                ),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.weight(1f)
-            )
-
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = CardBackground,
-                modifier = Modifier.size(50.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(Icons.Outlined.Tune, contentDescription = "Filtros", tint = TextDark)
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // Contador de Resultados
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Resultados", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = TextDark)
-            Spacer(modifier = Modifier.width(8.dp))
-            Surface(
-                color = PrimaryGreenButton,
-                shape = CircleShape
-            ) {
-                Text(
-                    text = "${visibleProducts.size}",
-                    color = Color.White,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+        item {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(
+                    value = searchQuery, onValueChange = onSearchChange,
+                    placeholder = { Text("Buscar por nombre...", fontSize = 13.sp, color = TextMuted) },
+                    leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null, tint = TextMuted) },
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(focusedContainerColor = Color(0xFFEEF2F6), unfocusedContainerColor = Color(0xFFEEF2F6), focusedBorderColor = Color.Transparent, unfocusedBorderColor = Color.Transparent),
+                    shape = RoundedCornerShape(12.dp), modifier = Modifier.weight(1f)
                 )
+                Surface(shape = RoundedCornerShape(12.dp), color = CardBackground, modifier = Modifier.size(50.dp)) {
+                    Box(contentAlignment = Alignment.Center) { Icon(Icons.Outlined.Tune, contentDescription = "Filtros", tint = TextDark) }
+                }
             }
         }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Grid 2 Columnas de Tarjetas de Productos
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxSize()
-        ) {
-            items(visibleProducts) { product ->
-                ProductCard(product = product)
+        item {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Resultados", fontWeight = FontWeight.Bold, fontSize = 14.sp, color = TextDark)
+                Spacer(Modifier.width(8.dp))
+                Surface(color = PrimaryGreenButton, shape = CircleShape) {
+                    Text("${visibleProducts.size}", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp))
+                }
+            }
+        }
+        items(visibleProducts.chunked(2)) { rowProducts ->
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                rowProducts.forEach { product -> ProductCard(product, Modifier.weight(1f)) }
+                if (rowProducts.size == 1) Spacer(Modifier.weight(1f))
             }
         }
     }
@@ -284,7 +205,7 @@ fun StatCard(title: String, count: String, bgColor: Color, iconColor: Color, mod
 }
 
 @Composable
-fun ProductCard(product: ProductCatalogDto) {
+fun ProductCard(product: ProductCatalogDto, modifier: Modifier = Modifier) {
     val azureOrigin = com.sistemas.herrerasystemmobile.data.remote.retrofit.RetrofitClient.API_ORIGIN
     val fullImageUrl = remember(product.imageUrl) {
         val imageUrl = product.imageUrl
@@ -299,7 +220,7 @@ fun ProductCard(product: ProductCatalogDto) {
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = CardBackground),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        modifier = Modifier.fillMaxWidth().height(210.dp)
+        modifier = modifier.fillMaxWidth().height(210.dp)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(

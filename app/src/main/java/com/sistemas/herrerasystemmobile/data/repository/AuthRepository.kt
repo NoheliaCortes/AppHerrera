@@ -3,7 +3,7 @@ package com.sistemas.herrerasystemmobile.data.repository
 import com.sistemas.herrerasystemmobile.data.remote.api.ApiService
 import com.sistemas.herrerasystemmobile.data.remote.dto.LoginRequestDto
 
-data class AuthenticatedUser(val token: String, val displayName: String)
+data class AuthenticatedUser(val token: String, val displayName: String, val roleId: Int?)
 
 class AuthRepository(private val apiService: ApiService) {
     suspend fun login(username: String, password: String): Result<AuthenticatedUser> = try {
@@ -14,7 +14,14 @@ class AuthRepository(private val apiService: ApiService) {
             val displayName = data?.fullName?.takeIf(String::isNotBlank)
                 ?: data?.username?.takeIf(String::isNotBlank)
                 ?: username.trim()
-            Result.success(AuthenticatedUser(data!!.token!!, displayName))
+            val roleId = data!!.roles.firstNotNullOfOrNull { role ->
+                role.toIntOrNull() ?: when {
+                    role.contains("admin", ignoreCase = true) -> 1
+                    role.contains("vendedor", ignoreCase = true) || role.contains("seller", ignoreCase = true) -> 2
+                    else -> null
+                }
+            }
+            Result.success(AuthenticatedUser(data.token!!, displayName, roleId))
         } else {
             val message = body?.message?.takeIf(String::isNotBlank)
                 ?: when (response.code()) {

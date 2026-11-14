@@ -4,6 +4,8 @@ import com.sistemas.herrerasystemmobile.data.remote.api.ApiService
 import com.sistemas.herrerasystemmobile.data.remote.dto.*
 
 class ClientRepository(private val api: ApiService) {
+    suspend fun getMunicipalities(): Result<List<MunicipalityDto>> = request { api.getMunicipalities() }
+
     suspend fun getClients(search: String? = null): Result<List<ClientDto>> {
       return try {
         val clients = mutableListOf<ClientDto>()

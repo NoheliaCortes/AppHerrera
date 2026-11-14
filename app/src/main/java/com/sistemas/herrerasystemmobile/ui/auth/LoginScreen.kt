@@ -36,13 +36,14 @@ fun LoginScreen(
     loginState: UiState<String> = UiState.Success(""),
     onLoginClick: (String, String) -> Unit = { _, _ -> }
 ) {
-    var usuario by remember { mutableStateOf("Marcelo") }
-    var password by remember { mutableStateOf("herrerra") }
+    var usuario by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.statusBars)
             .background(ScreenBackground)
     ) {
         // Cabecera Verde Menta Curva (Sorbetería Herrera)

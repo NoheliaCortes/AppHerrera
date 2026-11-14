@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import com.sistemas.herrerasystemmobile.data.remote.dto.ClientDto
 import com.sistemas.herrerasystemmobile.data.remote.dto.ClientCreateDto
 import com.sistemas.herrerasystemmobile.data.remote.dto.ClientUpdateDto
+import com.sistemas.herrerasystemmobile.data.remote.dto.MunicipalityDto
 import com.sistemas.herrerasystemmobile.ui.common.UiState
 import com.sistemas.herrerasystemmobile.ui.dashboard.BottomNavigationBar
 import com.sistemas.herrerasystemmobile.ui.theme.*
@@ -131,7 +132,8 @@ fun ClientsScreen(state: UiState<ClientsUiData>, query: String, filter: String,
             }
         }
     }
-    if (showForm) ClientFormDialog(editing, onDismiss = { showForm = false }, onSave = { municipality, first, last, phone, pos, address, active ->
+    val municipalityOptions = (state as? UiState.Success)?.data?.municipalities.orEmpty()
+    if (showForm) ClientFormDialog(editing, municipalityOptions, onDismiss = { showForm = false }, onSave = { municipality, first, last, phone, pos, address, active ->
         val current = editing
         if (current == null) onCreate(ClientCreateDto(municipality, first, last, phone.ifBlank { null }, pos.ifBlank { null }, address.ifBlank { null }))
         else onUpdate(current.id, ClientUpdateDto(municipality, first, last, phone.ifBlank { null }, pos.ifBlank { null }, address.ifBlank { null }, active))
@@ -188,9 +190,13 @@ private fun ClientCard(client: ClientDto, onEdit: () -> Unit, onDelete: () -> Un
 }
 
 @Composable
-private fun ClientFormDialog(client: ClientDto?, onDismiss: () -> Unit,
+@OptIn(ExperimentalMaterial3Api::class)
+private fun ClientFormDialog(client: ClientDto?, municipalities: List<MunicipalityDto>, onDismiss: () -> Unit,
     onSave: (Int, String, String, String, String, String, Boolean) -> Unit) {
-    var municipality by remember(client) { mutableStateOf(client?.municipalityId?.toString() ?: "") }
+    var municipalityExpanded by remember { mutableStateOf(false) }
+    var municipalityId by remember(client, municipalities) {
+        mutableStateOf(client?.municipalityId?.takeIf { id -> municipalities.any { it.id == id } } ?: municipalities.firstOrNull()?.id)
+    }
     var first by remember(client) { mutableStateOf(client?.firstName ?: "") }
     var last by remember(client) { mutableStateOf(client?.lastName ?: "") }
     var phone by remember(client) { mutableStateOf(client?.phone.orEmpty()) }
@@ -199,13 +205,34 @@ private fun ClientFormDialog(client: ClientDto?, onDismiss: () -> Unit,
     var active by remember(client) { mutableStateOf(client?.isActive != false) }
     AlertDialog(onDismissRequest = onDismiss, title = { Text(if (client == null) "Nuevo cliente" else "Editar cliente") },
         text = { Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            OutlinedTextField(municipality, { municipality = it }, label = { Text("ID municipio") }, singleLine = true)
+            ExposedDropdownMenuBox(
+                expanded = municipalityExpanded,
+                onExpandedChange = { municipalityExpanded = it }
+            ) {
+                OutlinedTextField(
+                    value = municipalities.firstOrNull { it.id == municipalityId }?.let { "${it.municipalityName} · ${it.departmentName}" }.orEmpty(),
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Municipio") },
+                    placeholder = { Text(if (municipalities.isEmpty()) "No hay municipios disponibles" else "Selecciona un municipio") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = municipalityExpanded) },
+                    modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true).fillMaxWidth()
+                )
+                ExposedDropdownMenu(expanded = municipalityExpanded, onDismissRequest = { municipalityExpanded = false }) {
+                    municipalities.filter { it.isActive != false || it.id == client?.municipalityId }.forEach { municipality ->
+                        DropdownMenuItem(
+                            text = { Text("${municipality.municipalityName} · ${municipality.departmentName}") },
+                            onClick = { municipalityId = municipality.id; municipalityExpanded = false }
+                        )
+                    }
+                }
+            }
             OutlinedTextField(first, { first = it }, label = { Text("Nombre") }, singleLine = true)
             OutlinedTextField(last, { last = it }, label = { Text("Apellido") }, singleLine = true)
             OutlinedTextField(phone, { phone = it }, label = { Text("Teléfono") }, singleLine = true)
             OutlinedTextField(point, { point = it }, label = { Text("Punto de venta") }, singleLine = true)
             OutlinedTextField(address, { address = it }, label = { Text("Dirección") }, singleLine = true)
             if (client != null) Row(verticalAlignment = Alignment.CenterVertically) { Checkbox(active, { active = it }); Text("Activo") }
-        } }, confirmButton = { TextButton(enabled = municipality.toIntOrNull() != null && first.isNotBlank() && last.isNotBlank(), onClick = { onSave(municipality.toInt(), first.trim(), last.trim(), phone.trim(), point.trim(), address.trim(), active) }) { Text("Guardar") } },
+        } }, confirmButton = { TextButton(enabled = municipalityId != null && first.isNotBlank() && last.isNotBlank(), onClick = { onSave(municipalityId!!, first.trim(), last.trim(), phone.trim(), point.trim(), address.trim(), active) }) { Text("Guardar") } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } })
 }

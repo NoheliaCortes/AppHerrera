@@ -6,12 +6,18 @@ import com.sistemas.herrerasystemmobile.data.remote.dto.*
 import com.sistemas.herrerasystemmobile.data.repository.ClientRepository
 import com.sistemas.herrerasystemmobile.ui.common.UiState
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-data class ClientsUiData(val clients: List<ClientDto> = emptyList(), val stats: ClientStatsDto? = null)
+data class ClientsUiData(
+    val clients: List<ClientDto> = emptyList(),
+    val stats: ClientStatsDto? = null,
+    val municipalities: List<MunicipalityDto> = emptyList()
+)
 
 class ClientsViewModel(private val repository: ClientRepository) : ViewModel() {
     private val _uiState = MutableStateFlow<UiState<ClientsUiData>>(UiState.Loading)
@@ -22,14 +28,21 @@ class ClientsViewModel(private val repository: ClientRepository) : ViewModel() {
     val activeFilter: StateFlow<String> = _activeFilter
     private var searchJob: Job? = null
 
-    init { load() }
     fun load() = viewModelScope.launch {
         _uiState.value = UiState.Loading
         val clients = repository.getClients(_query.value.ifBlank { null })
         if (clients.isFailure) _uiState.value = UiState.Error(clients.exceptionOrNull()?.message ?: "No se pudieron cargar clientes")
         else {
-            val stats = repository.getStats()
-            _uiState.value = UiState.Success(ClientsUiData(clients.getOrDefault(emptyList()), stats.getOrNull()))
+            val (stats, municipalities) = coroutineScope {
+                val statsResult = async { repository.getStats() }
+                val municipalitiesResult = async { repository.getMunicipalities() }
+                statsResult.await() to municipalitiesResult.await()
+            }
+            _uiState.value = UiState.Success(ClientsUiData(
+                clients = clients.getOrDefault(emptyList()),
+                stats = stats.getOrNull(),
+                municipalities = municipalities.getOrDefault(emptyList())
+            ))
         }
     }
     fun search(value: String) { _query.value = value; searchJob?.cancel(); searchJob = viewModelScope.launch { delay(350); load() } }
